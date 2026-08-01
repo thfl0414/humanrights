@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>고등학교 통합사회 - 인권 탐구 랩</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .typing-effect::after {
+            content: '|';
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+        
+        /* 스크롤바 숨기기 (깔끔한 UI용) */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-gray-800 h-screen flex flex-col">
+
+    <!-- 상단 헤더 -->
+    <header class="bg-indigo-600 text-white shadow-lg z-10">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center flex-wrap gap-4">
+            <div>
+                <h1 class="text-2xl font-bold flex items-center gap-2">
+                    <i class="fas fa-balance-scale"></i> 인권 탐구 랩 (Lab)
+                </h1>
+                <div class="flex items-center gap-3 mt-1">
+                    <p class="text-indigo-200 text-sm">통합사회 Ⅰ. 인권 보장과 헌법 - 사회적 소수자와 청소년 노동권</p>
+                    <button onclick="openTeacherLogin()" class="text-xs bg-indigo-800 hover:bg-indigo-900 text-white px-2 py-1 rounded transition-colors shadow-sm"><i class="fas fa-chalkboard-teacher"></i> 교사용</button>
+                </div>
+            </div>
+            <!-- 진행 단계 네비게이션 -->
+            <nav class="flex space-x-1 bg-indigo-800/50 p-1 rounded-lg">
+                <button onclick="switchTab('tab1')" id="nav-tab1" class="nav-btn px-4 py-2 rounded-md bg-white text-indigo-700 font-semibold transition-colors text-sm sm:text-base">
+                    1. 일상 속 차별 발견
+                </button>
+                <button onclick="switchTab('tab2')" id="nav-tab2" class="nav-btn px-4 py-2 rounded-md text-indigo-100 hover:bg-indigo-700 font-semibold transition-colors text-sm sm:text-base">
+                    2. AI 노동 인권 검토
+                </button>
+                <button onclick="switchTab('tab3')" id="nav-tab3" class="nav-btn px-4 py-2 rounded-md text-indigo-100 hover:bg-indigo-700 font-semibold transition-colors text-sm sm:text-base">
+                    3. 해결 방안 공유
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="flex-grow overflow-auto p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+        
+        <!-- [탭 1] 도입: 일상 속 차별 발견하기 -->
+        <section id="tab1" class="tab-content active">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">🤔 일상 속 무의식적 차별 발견하기</h2>
+                <p class="text-gray-600 mb-8">우리 주변에서 당연하게 여겼던 것들이 누군가에게는 차별과 불편함이 될 수 있습니다. 아래 사례를 보고 누가 불편함을 겪을지 생각해봅시다.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- 사례 1 -->
+                    <div class="bg-blue-50 rounded-xl p-6 border border-blue-100 hover:shadow-md transition-shadow">
+                        <div class="text-4xl mb-4 text-blue-500"><i class="fas fa-subway"></i></div>
+                        <h3 class="font-bold text-lg mb-2">오른손잡이용 개찰구</h3>
+                        <p class="text-gray-600 text-sm mb-4">대부분의 지하철 개찰구 카드 찍는 곳은 오른쪽에 위치해 있습니다.</p>
+                        <div class="bg-white p-3 rounded-lg border border-gray-200">
+                            <span class="text-xs font-bold text-gray-500">누가 불편할까요?</span>
+                            <p class="text-sm font-medium mt-1">왼손잡이, 오른쪽 팔 사용이 어려운 장애인</p>
+                        </div>
+                    </div>
+                    <!-- 사례 2 -->
+                    <div class="bg-green-50 rounded-xl p-6 border border-green-100 hover:shadow-md transition-shadow">
+                        <div class="text-4xl mb-4 text-green-500"><i class="fas fa-utensils"></i></div>
+                        <h3 class="font-bold text-lg mb-2">단일화된 학교 급식</h3>
+                        <p class="text-gray-600 text-sm mb-4">모든 학생에게 고기 반찬이 포함된 동일한 식단이 제공됩니다.</p>
+                        <div class="bg-white p-3 rounded-lg border border-gray-200">
+                            <span class="text-xs font-bold text-gray-500">누가 불편할까요?</span>
+                            <p class="text-sm font-medium mt-1">채식주의자, 특정 종교인, 알레르기 질환자</p>
+                        </div>
+                    </div>
+                    <!-- 사례 3 -->
+                    <div class="bg-orange-50 rounded-xl p-6 border border-orange-100 hover:shadow-md transition-shadow">
+                        <div class="text-4xl mb-4 text-orange-500"><i class="fas fa-briefcase"></i></div>
+                        <h3 class="font-bold text-lg mb-2">키오스크 전면 도입</h3>
+                        <p class="text-gray-600 text-sm mb-4">식당이나 매장의 주문 방식이 100% 무인 단말기(키오스크)로 변경되었습니다.</p>
+                        <div class="bg-white p-3 rounded-lg border border-gray-200">
+                            <span class="text-xs font-bold text-gray-500">누가 불편할까요?</span>
+                            <p class="text-sm font-medium mt-1">디지털 기기에 익숙하지 않은 고령자, 시각 장애인</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 rounded-xl p-6 border border-indigo-100">
+                    <h3 class="font-bold text-indigo-800 mb-2"><i class="fas fa-bullseye mr-2"></i>오늘의 탐구 질문</h3>
+                    <p class="text-lg text-indigo-900 font-medium">"우리 사회에서 사회적 소수자와 청소년의 인권은 어떤 모습으로 침해되고 있으며, 이를 개인적·사회적 차원에서 어떻게 해결할 수 있을까?"</p>
+                </div>
+                
+                <div class="mt-8 flex justify-end">
+                    <button onclick="switchTab('tab2')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-colors flex items-center gap-2">
+                        다음 활동으로 이동 <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- [탭 2] 탐색: AI 근로계약서 검토기 -->
+        <section id="tab2" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+                
+                <!-- 왼쪽: 계약서 입력 영역 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-800"><i class="fas fa-file-signature text-blue-500 mr-2"></i>청소년 근로계약서 검토</h2>
+                        <button onclick="loadExampleContract()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded-md transition-colors">
+                            <i class="fas fa-file-import mr-1"></i> 사례 불러오기
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">본인이 경험했거나 조사한 아르바이트 근로계약서(또는 공고문) 내용을 입력하세요. (개인정보는 제외)</p>
+                    
+                    <textarea id="contractInput" class="w-full flex-grow p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none" placeholder="여기에 근로계약서 내용이나 근무 조건을 입력하세요.&#10;&#10;예시)&#10;- 근무시간: 평일 오후 6시 ~ 밤 11시&#10;- 임금: 시급 8,500원&#10;- 휴게시간: 손님 없을 때 알아서 쉼&#10;- 기타: 지각 시 10,000원 벌금"></textarea>
+                    
+                    <button onclick="analyzeContract()" class="mt-4 w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all flex justify-center items-center gap-2">
+                        <i class="fas fa-robot"></i> AI 챗봇에게 법률 위반 1차 검토 받기
+                    </button>
+                </div>
+
+                <!-- 오른쪽: AI 결과 및 법령 정보 영역 -->
+                <div class="flex flex-col gap-6">
+                    <!-- AI 피드백 영역 -->
+                    <div class="bg-gray-900 rounded-2xl shadow-sm border border-gray-800 p-6 flex flex-col flex-grow relative overflow-hidden">
+                        <!-- AI Warning Badge -->
+                        <div class="absolute top-0 left-0 w-full bg-yellow-500 text-black text-xs font-bold text-center py-1">
+                            <i class="fas fa-exclamation-triangle"></i> 주의: AI의 검토 결과는 참고용이며 오류가 있을 수 있습니다. 반드시 아래 '관련 법령'과 대조하세요.
+                        </div>
+                        
+                        <h2 class="text-xl font-bold text-white mb-4 mt-4 flex items-center gap-2">
+                            <i class="fas fa-comment-dots text-purple-400"></i> AI 1차 검토 결과
+                        </h2>
+                        
+                        <div id="aiResponseArea" class="bg-gray-800 rounded-lg p-4 flex-grow overflow-auto text-gray-200 border border-gray-700">
+                            <div class="flex flex-col items-center justify-center h-full text-gray-500">
+                                <i class="fas fa-arrow-left text-3xl mb-3"></i>
+                                <p>왼쪽에서 계약서 내용을 입력하고</p>
+                                <p>검토 버튼을 눌러주세요.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 관련 법령 (국가법령정보센터 연계 시뮬레이션) -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                        <h2 class="text-lg font-bold text-gray-800 mb-3 flex justify-between items-center">
+                            <span><i class="fas fa-book text-green-600 mr-2"></i>관련 핵심 법령 (Fact Check)</span>
+                            <a href="https://www.law.go.kr/" target="_blank" class="text-xs text-blue-600 hover:underline">국가법령정보센터 가기 <i class="fas fa-external-link-alt"></i></a>
+                        </h2>
+                        <div class="space-y-3 h-48 overflow-y-auto pr-2 custom-scrollbar">
+                            <div class="p-3 bg-gray-50 rounded border border-gray-200">
+                                <span class="text-xs font-bold bg-green-100 text-green-800 px-2 py-1 rounded">근로기준법 제54조(휴게)</span>
+                                <p class="text-sm mt-2 text-gray-700">사용자는 근로시간이 4시간인 경우에는 30분 이상, 8시간인 경우에는 1시간 이상의 휴게시간을 근로시간 도중에 주어야 한다.</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded border border-gray-200">
+                                <span class="text-xs font-bold bg-green-100 text-green-800 px-2 py-1 rounded">근로기준법 제69조(근로시간)</span>
+                                <p class="text-sm mt-2 text-gray-700">15세 이상 18세 미만인 사람의 근로시간은 1일에 7시간, 1주에 35시간을 초과하지 못한다. (당사자 합의 시 1일 1시간, 1주 5시간 한도로 연장 가능)</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded border border-gray-200">
+                                <span class="text-xs font-bold bg-green-100 text-green-800 px-2 py-1 rounded">근로기준법 제70조(야간근로 제한)</span>
+                                <p class="text-sm mt-2 text-gray-700">사용자는 18세 미만자를 오후 10시부터 오전 6시까지의 시간 및 휴일에 근로시키지 못한다. (단, 본인 동의 및 고용노동부장관 인가 시 예외)</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded border border-gray-200">
+                                <span class="text-xs font-bold bg-green-100 text-green-800 px-2 py-1 rounded">근로기준법 제20조(위약 예정의 금지)</span>
+                                <p class="text-sm mt-2 text-gray-700">사용자는 근로계약 불이행에 대한 위약금 또는 손해배상액을 예정하는 계약을 체결하지 못한다. (지각 시 벌금 징수 불가)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- [탭 3] 적용: 해결 방안 모색 및 공유 (패들렛 대체) -->
+        <section id="tab3" class="tab-content h-full">
+            <div class="flex flex-col h-full bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800"><i class="fas fa-chalkboard text-yellow-500 mr-2"></i>인권 문제 해결 솔루션 공유 보드</h2>
+                        <p class="text-gray-500 text-sm mt-1">모둠별로 분석한 사례와 해결 방안을 게시하고, 친구들의 글에 피드백을 남겨주세요.</p>
+                    </div>
+                    <button onclick="togglePostModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow transition-colors flex items-center gap-2">
+                        <i class="fas fa-plus"></i> 새 의견 작성하기
+                    </button>
+                </div>
+
+                <!-- 게시물 그리드 (Masonry 스타일 흉내) -->
+                <div id="boardGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pb-4 pt-2">
+                    <!-- JS로 동적 렌더링 됨 -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 게시물 작성 모달 -->
+    <div id="postModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
+            <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center text-white">
+                <h3 class="font-bold text-lg">새 의견 작성</h3>
+                <button onclick="togglePostModal()" class="hover:text-indigo-200 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="flex gap-4">
+                    <div class="w-1/3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">모둠/이름</label>
+                        <input type="text" id="postAuthor" class="w-full border-gray-300 rounded-md shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="예: 3모둠">
+                    </div>
+                    <div class="w-2/3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">주제 분류</label>
+                        <select id="postCategory" class="w-full border-gray-300 rounded-md shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="청소년 노동권">청소년 노동권 침해</option>
+                            <option value="사회적 소수자">사회적 소수자 차별</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">분석한 문제점 (법률 위반 등)</label>
+                    <textarea id="postProblem" rows="2" class="w-full border-gray-300 rounded-md shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="사례에서 발견한 문제점을 요약해주세요."></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-blue-600 mb-1"><i class="fas fa-user mr-1"></i>개인적 차원의 해결 방안</label>
+                    <textarea id="postPersonal" rows="2" class="w-full border-gray-300 rounded-md shadow-sm border p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="의식 개선, 당사자의 대응 등 개인적 차원의 노력을 적어주세요."></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-green-600 mb-1"><i class="fas fa-users mr-1"></i>사회적(제도적) 차원의 해결 방안</label>
+                    <textarea id="postSocial" rows="2" class="w-full border-gray-300 rounded-md shadow-sm border p-2 focus:ring-green-500 focus:border-green-500" placeholder="법률 제/개정, 제도 개선 등 국가나 사회적 차원의 노력을 적어주세요."></textarea>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
+                <button onclick="togglePostModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100">취소</button>
+                <button onclick="submitPost()" class="px-4 py-2 bg-indigo-600 rounded-md text-white font-bold hover:bg-indigo-700 shadow">게시하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 교사 로그인 모달 -->
+    <div id="teacherLoginModal" class="fixed inset-0 bg-black/50 z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-sm overflow-hidden shadow-2xl">
+            <div class="bg-gray-800 px-6 py-4 text-white flex justify-between items-center">
+                <h3 class="font-bold"><i class="fas fa-lock mr-2"></i>교사용 대시보드 로그인</h3>
+                <button onclick="closeTeacherLogin()" class="hover:text-gray-300"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">비밀번호를 입력하세요 (기본: 1234)</label>
+                <input type="password" id="teacherPassword" class="w-full border-gray-300 rounded-md shadow-sm border p-2 focus:ring-gray-500 focus:border-gray-500" placeholder="비밀번호">
+                <p id="loginError" class="text-red-500 text-xs mt-2 hidden">비밀번호가 일치하지 않습니다.</p>
+            </div>
+            <div class="bg-gray-50 px-6 py-3 flex justify-end">
+                <button onclick="checkPassword()" class="px-4 py-2 bg-gray-800 rounded-md text-white font-bold hover:bg-gray-900 shadow">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 교사 대시보드 전체 화면 -->
+    <div id="teacherDashboard" class="fixed inset-0 bg-gray-100 z-[55] hidden flex flex-col">
+        <header class="bg-gray-800 text-white shadow-lg p-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold"><i class="fas fa-chalkboard-teacher mr-2"></i>교사용 대시보드 - 제출 현황 및 피드백</h1>
+            <div class="flex gap-3">
+                <button onclick="exportToCSV()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md text-sm font-semibold transition-colors"><i class="fas fa-file-csv mr-1"></i> CSV 다운로드</button>
+                <button onclick="closeTeacherDashboard()" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded-md text-sm transition-colors"><i class="fas fa-sign-out-alt mr-1"></i> 대시보드 종료</button>
+            </div>
+        </header>
+        <main class="flex-grow p-6 overflow-auto">
+            <div class="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-700 border-b border-gray-200">
+                            <th class="p-3 font-semibold text-sm w-24">모둠/이름</th>
+                            <th class="p-3 font-semibold text-sm w-32">주제</th>
+                            <th class="p-3 font-semibold text-sm">문제 분석</th>
+                            <th class="p-3 font-semibold text-sm w-32">상태</th>
+                            <th class="p-3 font-semibold text-sm w-32">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboardTableBody" class="divide-y divide-gray-200 text-sm">
+                        <!-- JS 렌더링 -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- AI 피드백 모달 -->
+    <div id="feedbackModal" class="fixed inset-0 bg-black/60 z-[70] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 text-white flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fas fa-robot mr-2"></i>AI 맞춤형 피드백 작성 (초안 검토)</h3>
+                <button onclick="closeFeedbackModal()" class="hover:text-indigo-200"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="flex-grow p-6 overflow-auto flex flex-col md:flex-row gap-6">
+                <!-- 학생 제출 내용 요약 -->
+                <div class="w-full md:w-1/2 flex flex-col gap-3">
+                    <h4 class="font-bold text-gray-700 border-b pb-2">학생 제출 내용</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm space-y-4 flex-grow overflow-auto">
+                        <div class="flex gap-4 border-b pb-2">
+                            <div><span class="font-bold text-gray-500 text-xs block">작성자</span><span id="fbAuthor" class="font-semibold text-gray-800"></span></div>
+                            <div><span class="font-bold text-gray-500 text-xs block">주제</span><span id="fbCategory" class="font-semibold text-purple-700 bg-purple-100 px-2 py-0.5 rounded"></span></div>
+                        </div>
+                        <div>
+                            <span class="font-bold text-gray-600">문제 분석:</span>
+                            <p class="mt-1 text-gray-800 bg-white p-2 border rounded" id="fbProblem"></p>
+                        </div>
+                        <div>
+                            <span class="font-bold text-blue-600"><i class="fas fa-user text-xs mr-1"></i>개인적 해결:</span>
+                            <p class="mt-1 text-gray-800 bg-blue-50 p-2 border border-blue-100 rounded" id="fbPersonal"></p>
+                        </div>
+                        <div>
+                            <span class="font-bold text-green-600"><i class="fas fa-users text-xs mr-1"></i>사회적 해결:</span>
+                            <p class="mt-1 text-gray-800 bg-green-50 p-2 border border-green-100 rounded" id="fbSocial"></p>
+                        </div>
+                    </div>
+                </div>
+                <!-- 교사 피드백 에디터 -->
+                <div class="w-full md:w-1/2 flex flex-col gap-3">
+                    <div class="flex justify-between items-end border-b pb-2">
+                        <h4 class="font-bold text-gray-700">교사 피드백 작성</h4>
+                        <button onclick="generateAIFeedback()" id="aiGenBtn" class="bg-purple-100 text-purple-700 hover:bg-purple-200 px-3 py-1.5 rounded text-sm font-bold transition-colors flex items-center gap-2 border border-purple-300">
+                            <i class="fas fa-magic"></i> AI 초안 생성하기
+                        </button>
+                    </div>
+                    <div class="text-xs text-gray-500 bg-gray-50 p-2 rounded border">※ 통합사회 성취기준 <strong class="text-gray-700">[10통사2-01-03]</strong>에 기반하여 AI가 평가하고 초안을 작성합니다. 교사가 최종 검토/수정 후 전송할 수 있습니다.</div>
+                    <textarea id="teacherFeedbackText" class="w-full flex-grow border-gray-300 rounded-lg shadow-sm border p-4 focus:ring-purple-500 focus:border-purple-500 text-sm resize-none" placeholder="여기에 피드백을 직접 작성하거나, 우측 상단의 'AI 초안 생성하기' 버튼을 눌러주세요."></textarea>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-t">
+                <span id="feedbackStatus" class="text-sm text-gray-500">대기 중...</span>
+                <div class="flex gap-3">
+                    <button onclick="closeFeedbackModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 font-semibold">취소</button>
+                    <button onclick="saveFeedback()" class="px-5 py-2 bg-indigo-600 rounded-md text-white font-bold hover:bg-indigo-700 shadow flex items-center gap-2"><i class="fas fa-paper-plane"></i> 학생에게 최종 전송</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 데이터 저장소 (시뮬레이션용)
+        let postsData = [
+            {
+                id: 1,
+                author: '1모둠',
+                category: '청소년 노동권',
+                problem: '지각 시 1만원 공제는 근로기준법 제20조 위반이며, 휴게시간을 명시하지 않은 것도 제54조 위반임.',
+                personal: '고용주에게 근로기준법 조항을 근거로 정당하게 휴게시간을 요구하고, 계약서 수정을 요청한다.',
+                social: '청소년 노동 인권 교육을 의무화하고, 고용노동부의 청소년 알바 사업장 불시 점검을 강화한다.',
+                feedback: '문제 상황을 근로기준법 제20조와 54조를 근거로 아주 정확하게 분석했습니다! 특히 사회적 차원에서의 \'불시 점검 강화\'는 실효성 있는 좋은 대안입니다. 추가로, 부당한 대우를 받았을 때 도움을 요청할 수 있는 국가 기관(예: 고용노동부, 청소년근로권익센터)에 대해서도 함께 알아보면 더 완벽한 해결책이 될 것입니다.'
+            },
+            {
+                id: 2,
+                author: '2모둠',
+                category: '사회적 소수자',
+                problem: '한국어를 잘 모른다는 이유로 근로계약서를 자국어로 제공하지 않고, 수당을 제대로 지급하지 않음.',
+                personal: '편견을 버리고 외국인 근로자를 우리 사회의 동등한 구성원으로 존중하는 태도를 가진다.',
+                social: '표준근로계약서의 다국어 번역본 제공을 법적 의무화하고, 이주노동자 권리 구제 전담 센터를 확충한다.',
+                feedback: ''
+            }
+        ];
+        
+        let currentEditingPostId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderBoard();
+        });
+
+        // --- 탭 전환 로직 ---
+        function switchTab(tabId) {
+            // 모든 탭 컨텐츠 숨기기
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            // 선택된 탭 보이기
+            document.getElementById(tabId).classList.add('active');
+            
+            // 네비게이션 스타일 업데이트
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.id === 'nav-' + tabId) {
+                    btn.classList.remove('text-indigo-100', 'hover:bg-indigo-700');
+                    btn.classList.add('bg-white', 'text-indigo-700');
+                } else {
+                    btn.classList.add('text-indigo-100', 'hover:bg-indigo-700');
+                    btn.classList.remove('bg-white', 'text-indigo-700');
+                }
+            });
+        }
+
+        // --- 탭 2: AI 분석기 로직 ---
+        function loadExampleContract() {
+            const example = `[청소년 아르바이트 근로계약서]
+근무처: 편의점
+근무기간: 2026.08.01 ~ 2026.12.31
+근무시간: 월~금 17:00 ~ 23:00
+휴게시간: 바쁘지 않을 때 카운터에서 식사
+임금: 시급 8,500원
+특약사항: 
+1. 10분 지각 시 해당 시간 시급 5,000원 공제
+2. 무단결근 시 당월 월급 전액 지급 불가`;
+            document.getElementById('contractInput').value = example;
+        }
+
+        function analyzeContract() {
+            const input = document.getElementById('contractInput').value;
+            const resArea = document.getElementById('aiResponseArea');
+            
+            if(!input.trim()) {
+                resArea.innerHTML = `<div class="text-red-400 p-4"><i class="fas fa-exclamation-circle mr-2"></i>계약서 내용을 입력해주세요.</div>`;
+                return;
+            }
+
+            // 분석 중 UI (로딩)
+            resArea.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full text-indigo-400">
+                    <i class="fas fa-circle-notch fa-spin text-4xl mb-3"></i>
+                    <p class="typing-effect">AI가 근로기준법을 바탕으로 분석 중입니다...</p>
+                </div>
+            `;
+
+            // 분석 시뮬레이션 (약 2초 후 결과 표시)
+            setTimeout(() => {
+                let responseHTML = `<div class="space-y-4">`;
+                
+                // 키워드 기반 간단한 룰셋 검토
+                let violations = [];
+                if(input.includes('23:00') || input.includes('밤') || input.includes('22:00')) {
+                    violations.push({
+                        title: '야간근로 제한 위반 의심',
+                        desc: '청소년(18세 미만)은 원칙적으로 밤 10시부터 새벽 6시까지 일할 수 없습니다. (근로기준법 제70조)',
+                        color: 'text-red-400'
+                    });
+                }
+                if(input.includes('휴게시간: 바쁘지 않을 때') || input.includes('휴게시간 없음') || input.includes('알아서')) {
+                    violations.push({
+                        title: '휴게시간 미보장 의심',
+                        desc: '휴게시간은 근로자가 자유롭게 이용할 수 있어야 합니다. 4시간 근무 시 30분, 8시간 시 1시간을 반드시 도중에 부여해야 합니다. (근로기준법 제54조)',
+                        color: 'text-yellow-400'
+                    });
+                }
+                if(input.includes('지각') || input.includes('벌금') || input.includes('공제')) {
+                    violations.push({
+                        title: '위약 예정의 금지 위반 의심',
+                        desc: '지각이나 결근을 이유로 미리 벌금을 정해두고 임금에서 일방적으로 공제하는 것은 불법입니다. (근로기준법 제20조, 제43조)',
+                        color: 'text-red-400'
+                    });
+                }
+                
+                // 최소 임금 체크 시뮬레이션 (2026년 가정치)
+                const currentYearWage = 10030; // 2026 가정
+                const wageMatch = input.match(/8,?[0-9]{3}|9,?[0-9]{3}/);
+                if(wageMatch) {
+                    violations.push({
+                        title: '최저임금 위반 의심',
+                        desc: `명시된 시급이 법정 최저임금에 미달할 가능성이 높습니다. 청소년도 성인과 동일한 최저임금을 적용받습니다.`,
+                        color: 'text-orange-400'
+                    });
+                }
+
+                if(violations.length === 0) {
+                    responseHTML += `
+                        <div class="bg-green-900/30 border border-green-800 p-4 rounded-lg">
+                            <h3 class="font-bold text-green-400 mb-2"><i class="fas fa-check-circle"></i> 심각한 법률 위반 키워드가 발견되지 않았습니다.</h3>
+                            <p class="text-sm text-gray-300">하지만 AI가 인지하지 못한 맥락이 있을 수 있으니, 우측의 국가법령정보센터나 청소년근로권익센터를 통해 전문가의 교차 검증을 반드시 진행하세요.</p>
+                        </div>`;
+                } else {
+                    responseHTML += `<div class="bg-red-900/20 p-3 rounded text-sm text-red-300 border border-red-800 mb-4">
+                        🚨 텍스트 분석 결과, 다음 항목들이 근로기준법에 위배될 소지가 있습니다. 우측의 '관련 핵심 법령'과 비교해 보세요.
+                    </div>`;
+                    violations.forEach(v => {
+                        responseHTML += `
+                            <div class="bg-gray-800 border-l-4 border-indigo-500 p-3 rounded shadow-sm">
+                                <h4 class="font-bold ${v.color}"><i class="fas fa-exclamation-circle"></i> ${v.title}</h4>
+                                <p class="text-sm mt-1 text-gray-300">${v.desc}</p>
+                            </div>
+                        `;
+                    });
+                }
+
+                responseHTML += `
+                    <hr class="border-gray-700 my-4">
+                    <p class="text-xs text-gray-500">※ 본 AI 분석 결과는 수업 실습용으로, 실제 법적 효력을 갖지 않습니다. 교사 및 관련 법령(근로기준법 등)을 통한 확인 과정(비판적 수용)을 거쳐 해결 방안을 모색하세요.</p>
+                </div>`;
+                
+                resArea.innerHTML = responseHTML;
+            }, 2000);
+        }
+
+        // --- 탭 3: 패들렛 (공유 보드) 로직 ---
+        function togglePostModal() {
+            const modal = document.getElementById('postModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function submitPost() {
+            const author = document.getElementById('postAuthor').value;
+            const category = document.getElementById('postCategory').value;
+            const problem = document.getElementById('postProblem').value;
+            const personal = document.getElementById('postPersonal').value;
+            const social = document.getElementById('postSocial').value;
+
+            if(!author || !problem || !personal || !social) {
+                showCustomAlert("모든 항목을 꼼꼼히 작성해주세요!");
+                return;
+            }
+
+            const newPost = {
+                id: Date.now(),
+                author,
+                category,
+                problem,
+                personal,
+                social,
+                feedback: ''
+            };
+
+            postsData.unshift(newPost); // 배열의 맨 앞에 추가
+            renderBoard(); // 보드 다시 그리기
+            
+            // 대시보드가 열려있다면 즉시 갱신
+            if(document.getElementById('teacherDashboard') && !document.getElementById('teacherDashboard').classList.contains('hidden')){
+                 renderTeacherDashboard(); 
+            }
+            
+            // 폼 초기화 및 모달 닫기
+            document.getElementById('postAuthor').value = '';
+            document.getElementById('postProblem').value = '';
+            document.getElementById('postPersonal').value = '';
+            document.getElementById('postSocial').value = '';
+            togglePostModal();
+        }
+
+        // 학생 공유 보드 렌더링 함수
+        function renderBoard() {
+            const boardGrid = document.getElementById('boardGrid');
+            if(!boardGrid) return;
+            boardGrid.innerHTML = ''; 
+
+            postsData.forEach(post => {
+                const bgClass = post.category === '청소년 노동권' ? 'bg-yellow-50 border-yellow-200' : 'bg-purple-50 border-purple-200';
+                const badgeClass = post.category === '청소년 노동권' ? 'bg-yellow-200 text-yellow-800' : 'bg-purple-200 text-purple-800';
+
+                let feedbackHTML = '';
+                if(post.feedback) {
+                    feedbackHTML = `
+                        <div class="mt-3 pt-3 border-t border-gray-200">
+                            <div class="flex items-start gap-2 bg-indigo-50 p-3 rounded-lg border border-indigo-100 shadow-sm">
+                                <span class="bg-indigo-600 text-white text-xs px-2 py-1 rounded flex-shrink-0 mt-0.5"><i class="fas fa-chalkboard-teacher mr-1"></i>선생님 피드백</span>
+                                <p class="text-sm text-gray-800 leading-relaxed font-medium">${post.feedback.replace(/\n/g, '<br>')}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const postHTML = `
+                    <div class="${bgClass} p-5 rounded-xl border shadow-sm flex flex-col gap-3 animation-fade-in">
+                        <div class="flex justify-between items-start">
+                            <span class="${badgeClass} text-xs font-bold px-2 py-1 rounded">${post.category}</span>
+                            <span class="text-xs text-gray-500 font-bold">${post.author}</span>
+                        </div>
+                        <h3 class="font-bold text-gray-800 truncate">${post.problem.substring(0,20)}...</h3>
+                        <p class="text-sm text-gray-600 bg-white p-2 rounded border border-gray-100 font-medium">
+                            ${post.problem.replace(/\n/g, '<br>')}
+                        </p>
+                        <div class="mt-2 text-sm space-y-1">
+                            <p class="text-blue-600 font-semibold"><i class="fas fa-user text-xs mr-1"></i>개인적 해결:</p>
+                            <p class="text-gray-700 ml-4">${post.personal}</p>
+                            <p class="text-green-600 font-semibold mt-2"><i class="fas fa-users text-xs mr-1"></i>사회적 해결:</p>
+                            <p class="text-gray-700 ml-4">${post.social}</p>
+                        </div>
+                        ${feedbackHTML}
+                    </div>
+                `;
+                boardGrid.insertAdjacentHTML('beforeend', postHTML);
+            });
+        }
+
+        /* ==========================================
+           교사용 대시보드 및 AI 피드백 로직
+        ========================================== */
+        
+        function openTeacherLogin() {
+            document.getElementById('teacherPassword').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+            document.getElementById('teacherLoginModal').classList.remove('hidden');
+        }
+
+        function closeTeacherLogin() {
+            document.getElementById('teacherLoginModal').classList.add('hidden');
+        }
+
+        function checkPassword() {
+            const pw = document.getElementById('teacherPassword').value;
+            if(pw === '1234') { // 교사 기본 비밀번호
+                closeTeacherLogin();
+                document.getElementById('teacherDashboard').classList.remove('hidden');
+                renderTeacherDashboard();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function closeTeacherDashboard() {
+            document.getElementById('teacherDashboard').classList.add('hidden');
+        }
+
+        function renderTeacherDashboard() {
+            const tbody = document.getElementById('dashboardTableBody');
+            tbody.innerHTML = '';
+            
+            postsData.forEach(post => {
+                const statusBadge = post.feedback 
+                    ? `<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded font-bold">피드백 완료</span>`
+                    : `<span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded border">피드백 대기</span>`;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-3 whitespace-nowrap font-medium text-gray-800">${post.author}</td>
+                    <td class="p-3 whitespace-nowrap"><span class="text-xs bg-gray-200 text-gray-700 font-bold px-2 py-1 rounded">${post.category}</span></td>
+                    <td class="p-3 text-gray-600 truncate max-w-xs" title="${post.problem}">${post.problem}</td>
+                    <td class="p-3">${statusBadge}</td>
+                    <td class="p-3">
+                        <button onclick="openFeedbackModal(${post.id})" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded text-xs font-semibold transition-colors border border-indigo-200">
+                            <i class="fas fa-edit"></i> 피드백 관리
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openFeedbackModal(postId) {
+            currentEditingPostId = postId;
+            const post = postsData.find(p => p.id === postId);
+            
+            document.getElementById('fbAuthor').textContent = post.author;
+            document.getElementById('fbCategory').textContent = post.category;
+            document.getElementById('fbProblem').textContent = post.problem;
+            document.getElementById('fbPersonal').textContent = post.personal;
+            document.getElementById('fbSocial').textContent = post.social;
+            document.getElementById('teacherFeedbackText').value = post.feedback || '';
+            document.getElementById('feedbackStatus').textContent = '대기 중...';
+            document.getElementById('feedbackStatus').className = 'text-sm text-gray-500';
+            
+            document.getElementById('feedbackModal').classList.remove('hidden');
+        }
+
+        function closeFeedbackModal() {
+            document.getElementById('feedbackModal').classList.add('hidden');
+            currentEditingPostId = null;
+        }
+
+        async function generateAIFeedback() {
+            if(!currentEditingPostId) return;
+            const post = postsData.find(p => p.id === currentEditingPostId);
+            
+            const btn = document.getElementById('aiGenBtn');
+            const statusTxt = document.getElementById('feedbackStatus');
+            const textarea = document.getElementById('teacherFeedbackText');
+            
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> 초안 생성 중...`;
+            btn.disabled = true;
+            statusTxt.textContent = "AI가 성취기준에 기반하여 피드백 초안을 작성 중입니다... (최대 10초 소요)";
+            statusTxt.className = "text-sm text-indigo-600 font-semibold";
+
+            // Gemini API 프롬프트 (성취기준 및 교과 역량 반영)
+            const prompt = `당신은 고등학교 통합사회 교사입니다. 
+다음은 'Ⅰ. 인권 보장과 헌법' 단원(성취기준: [10통사2-01-03] 사회적 소수자 차별, 청소년의 노동권 등 국내 인권 문제와 인권지수를 통해 확인할 수 있는 세계 인권 문제의 양상을 조사하고, 이에 대한 해결 방안을 모색한다.)을 학습한 학생의 모둠 활동 결과물입니다.
+
+[학생 제출 내용]
+- 주제: ${post.category}
+- 발견한 문제점: ${post.problem}
+- 개인적 차원 해결방안: ${post.personal}
+- 사회적(제도적) 차원 해결방안: ${post.social}
+
+위 내용을 바탕으로 학생에게 전달할 '교사 피드백 초안'을 작성해주세요. 
+[피드백 작성 조건]
+1. 칭찬으로 시작: 학생이 분석한 내용 중 구체적인 부분(법령 적용, 문제 인식 등)을 언급하며 칭찬해주세요.
+2. 성취기준 연계 평가: 개인적/사회적 해결 방안이 다각적으로 잘 제시되었는지, 실효성이 있는지 교과의 관점에서 평가해주세요.
+3. 발전적 질문: 학생이 비판적 사고력을 더 기를 수 있도록 1개의 추가 질문이나 보완점을 따뜻하게 제시해주세요.
+4. 어조: 학생에게 직접 말하는 듯한 친절하고 전문적인 어조(~했어요, ~입니다)를 사용해주세요.
+5. 분량: 300자 내외로 문단을 나누어 가독성 좋게 작성해주세요.`;
+
+            const apiKey = ""; // Canvas 환경에서 자동 제공됨
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                if (result.candidates && result.candidates[0].content.parts[0].text) {
+                    textarea.value = result.candidates[0].content.parts[0].text;
+                    statusTxt.innerHTML = "<i class='fas fa-check-circle'></i> AI 피드백 초안이 생성되었습니다. 내용을 검토/수정 후 학생에게 전송하세요.";
+                    statusTxt.className = "text-sm text-green-600 font-bold";
+                } else {
+                    throw new Error("응답 결과가 비어있습니다.");
+                }
+            } catch (error) {
+                console.error("AI Generate Error:", error);
+                statusTxt.innerHTML = "<i class='fas fa-exclamation-triangle'></i> 생성 중 오류가 발생했습니다. 직접 작성해주세요.";
+                statusTxt.className = "text-sm text-red-500 font-bold";
+            } finally {
+                btn.innerHTML = `<i class="fas fa-magic"></i> AI 초안 생성하기`;
+                btn.disabled = false;
+            }
+        }
+
+        function saveFeedback() {
+            if(!currentEditingPostId) return;
+            const feedbackText = document.getElementById('teacherFeedbackText').value.trim();
+            
+            // 데이터 업데이트
+            const postIndex = postsData.findIndex(p => p.id === currentEditingPostId);
+            if(postIndex !== -1) {
+                postsData[postIndex].feedback = feedbackText;
+            }
+            
+            closeFeedbackModal();
+            renderTeacherDashboard(); // 대시보드 갱신
+            renderBoard(); // 학생 화면 패들렛 즉시 갱신 (실시간 피드백 연출)
+            showCustomAlert("작성하신 피드백이 학생 공유 보드에 전송되었습니다!");
+        }
+
+        // --- CSV 다운로드 로직 ---
+        function exportToCSV() {
+            if (postsData.length === 0) {
+                showCustomAlert("다운로드할 학생 데이터가 없습니다.");
+                return;
+            }
+
+            // CSV 헤더 (BOM 추가로 한글 깨짐 방지)
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            csvContent += "모둠/이름,주제,분석한 문제점,개인적 해결방안,사회적 해결방안,선생님 피드백\n";
+
+            postsData.forEach(row => {
+                // 셀 내 쉼표, 줄바꿈 처리를 위해 큰따옴표로 이스케이프
+                const escapeStr = (str) => '"' + (str || '').toString().replace(/"/g, '""').replace(/\n/g, ' ') + '"';
+                
+                const rowData = [
+                    escapeStr(row.author),
+                    escapeStr(row.category),
+                    escapeStr(row.problem),
+                    escapeStr(row.personal),
+                    escapeStr(row.social),
+                    escapeStr(row.feedback)
+                ].join(',');
+                
+                csvContent += rowData + "\n";
+            });
+
+            // 다운로드 트리거
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "인권탐구랩_학생결과물_종합.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Alert 대체용 커스텀 모달
+        function showCustomAlert(msg) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-[60] flex items-center gap-2 transition-all opacity-0 -translate-y-4';
+            alertDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${msg}`;
+            document.body.appendChild(alertDiv);
+            
+            // Animate in
+            setTimeout(() => {
+                alertDiv.classList.remove('opacity-0', '-translate-y-4');
+            }, 10);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                alertDiv.classList.add('opacity-0', '-translate-y-4');
+                setTimeout(() => alertDiv.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
