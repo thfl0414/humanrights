@@ -9,15 +9,20 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
   <!-- React & ReactDOM -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <!-- PropTypes (Recharts 의존성) -->
+  
+  <!-- PropTypes (Recharts 의존성 해결) -->
   <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  
   <!-- Babel -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <!-- Recharts -->
+  
+  <!-- Recharts (안정화 버전 고정) -->
   <script src="https://unpkg.com/recharts@2.1.12/umd/Recharts.js"></script>
+  
   <!-- Firebase Compat (Realtime Database 용) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
@@ -38,6 +43,7 @@
     const { useState, useEffect } = React;
     const { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip, Legend } = window.Recharts;
 
+    // 선생님의 Firebase 설정
     const firebaseConfig = {
       apiKey: "AIzaSyBMD8w3CZuIHwd-9lclVY2uE0L-c_xRQt4",
       authDomain: "humanrights-8c05a.firebaseapp.com",
@@ -58,7 +64,7 @@
     auth = firebase.auth();
     db = firebase.database();
 
-    // 데이터베이스 경로
+    // 데이터베이스 저장 경로 (특수문자 문제 방지를 위해 고정된 문자열 사용)
     const DB_PATH = "humanrights_data_v2";
 
     const COUNTRY_DATA = {
@@ -90,12 +96,12 @@
       // Step 1: 국가 선택
       const [selectedCountries, setSelectedCountries] = useState([]);
       
-      // Step 2: 데이터 분석 노트
+      // Step 2: 데이터 분석 노트 (세분화)
       const [analysis1, setAnalysis1] = useState('');
       const [analysis2, setAnalysis2] = useState('');
       const [analysis3, setAnalysis3] = useState('');
       
-      // Step 3: 공익 광고 기획
+      // Step 3: 공익 광고 기획 (세분화)
       const [psaTarget, setPsaTarget] = useState('');
       const [psaSocial, setPsaSocial] = useState('');
       const [psaPersonal, setPsaPersonal] = useState('');
@@ -115,7 +121,7 @@
         return () => unsub();
       }, []);
 
-      // 실시간 데이터 구독 (로그인 완료 후)
+      // 실시간 데이터 구독 (로그인 완료 후 실행)
       useEffect(() => {
         if (!user) return;
         
@@ -157,7 +163,7 @@
         setPledge(mySubmission.pledge || '');
         
         setIsEditing(true);
-        setStep(1); // 국가 선택 화면으로 바로 이동
+        setStep(1); // 수정 시 국가 선택 화면으로 바로 이동
       };
 
       const handleOpinionSubmit = async () => {
@@ -207,9 +213,7 @@
             <div className="max-w-3xl mx-auto space-y-6">
               <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm">
                 <h2 className="text-xl font-bold"><i className="fas fa-check-circle text-green-500"></i> 제출 완료</h2>
-                <button onClick={() => window.location.assign('teacher.html')} className="text-slate-400 text-sm hover:text-amber-600">
-                  <i className="fas fa-lock"></i> 교사 모드
-                </button>
+                {/* 교사 모드 버튼 삭제됨 */}
               </div>
               
               <div className="bg-white p-8 rounded-2xl shadow-md border-t-4 border-green-500 text-center">
@@ -225,7 +229,7 @@
                   )}
                 </div>
                 
-                <button onClick={handleEditClick} className="bg-white border-2 border-slate-200 px-6 py-2 rounded-xl font-bold hover:bg-slate-50 shadow-sm">
+                <button onClick={handleEditClick} className="bg-white border-2 border-slate-200 px-6 py-2 rounded-xl font-bold hover:bg-slate-50 shadow-sm transition-colors">
                   <i className="fas fa-edit"></i> 제출한 내용 다시 수정하기
                 </button>
               </div>
@@ -239,9 +243,7 @@
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm">
               <h2 className="text-xl font-bold"><i className="fas fa-globe-asia text-blue-600"></i> [통합사회] 세계 인권지수 탐구</h2>
-              <button onClick={() => window.location.assign('teacher.html')} className="text-slate-400 text-sm hover:text-amber-600">
-                <i className="fas fa-lock"></i> 교사 모드
-              </button>
+              {/* 교사 모드 버튼 삭제됨 */}
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -257,13 +259,13 @@
               )}
 
               <div className="p-4 sm:p-8">
-                {/* STEP 0: 도입부 */}
+                {}
                 {step === 0 && (
                   <div className="space-y-6">
                     <div className="bg-blue-50 border-l-4 border-blue-500 p-5 rounded">
                       <h3 className="font-bold text-blue-900 mb-2"><i className="fas fa-flag"></i> 학습 목표 확인</h3>
-                      <p className="text-sm mb-1"><b>[성취기준]</b> 10통사2-01-03 사회적 소수자 차별 등 인권 문제의 양상을 조사하고 해결방안 모색.</p>
-                      <p className="text-sm"><b>[탐구질문]</b> 세계 여러 나라의 인권지수 차이는 왜 발생하며, 어떻게 협력해야 할까?</p>
+                      <p className="text-sm mb-1"><b>[성취기준]</b> 10통사2-01-03 사회적 소수자 차별 등 국내 인권 문제와 인권지수를 통해 확인할 수 있는 세계 인권 문제의 양상을 조사하고, 이에 대한 해결 방안을 모색한다.</p>
+                      <p className="text-sm"><b>[탐구질문]</b> 세계 여러 나라의 인권지수는 어떤 차이를 보이며, 이러한 격차를 줄이기 위해 국제 사회는 어떻게 협력해야 할까?</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -273,12 +275,14 @@
 
                     <div className="bg-white p-4 rounded-xl border shadow-sm">
                       <h4 className="font-bold mb-2"><i className="fas fa-search"></i> 이 지도는 무엇을 나타낼까요?</h4>
-                      <p className="text-sm text-slate-600 mb-4">색깔이 다르게 칠해진 이유와 의미를 유추하여 친구들과 의견을 나눠봅시다.</p>
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Press_freedom_2023.svg/1024px-Press_freedom_2023.svg.png" alt="의문의 지도" className="w-full rounded mb-4"/>
+                      <p className="text-sm text-slate-600 mb-4">국가별로 색깔이 다르게 칠해진 이유와 의미를 유추하여 친구들과 의견을 나눠봅시다.</p>
+                      
+                      {/* 이미지 파일 경로가 ./map.png 로 수정되었습니다. */}
+                      <img src="./map.png" alt="의문의 세계 지도" className="w-full rounded mb-4"/>
                       
                       <div className="flex gap-2">
                         <input type="text" value={introOpinion} onChange={e=>setIntroOpinion(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleOpinionSubmit()} placeholder="어떤 의미의 지도일까요? 유추한 내용을 적어보세요" disabled={!studentName} className="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
-                        <button onClick={handleOpinionSubmit} disabled={!studentName || !introOpinion} className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold">등록</button>
+                        <button onClick={handleOpinionSubmit} disabled={!studentName || !introOpinion || isSubmittingOpinion} className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold">등록</button>
                       </div>
                     </div>
 
@@ -297,7 +301,7 @@
                   </div>
                 )}
 
-                {/* STEP 1: 국가선택 */}
+                {}
                 {step === 1 && (
                   <div className="space-y-6">
                     <h3 className="font-bold mb-2">비교 분석할 국가를 선택하세요 (2~3개)</h3>
@@ -308,7 +312,7 @@
                           <button key={c} onClick={() => {
                             if(isSelected) setSelectedCountries(selectedCountries.filter(x => x !== c));
                             else if(selectedCountries.length < 3) setSelectedCountries([...selectedCountries, c]);
-                          }} className={`px-4 py-2 rounded-full font-bold ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100'}`}>
+                          }} className={`px-4 py-2 rounded-full font-bold ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 hover:bg-slate-200'}`}>
                             {c}
                           </button>
                         );
@@ -321,17 +325,19 @@
                   </div>
                 )}
 
-                {/* STEP 2: 데이터분석 */}
+                {}
                 {step === 2 && (
                   <div className="space-y-6">
-                    <div className="h-80 w-full bg-slate-50 rounded border flex items-center justify-center p-4">
+                    <div className="h-80 w-full bg-slate-50 rounded border flex flex-col items-center justify-center p-4">
                       <ResponsiveContainer width="100%" height="100%">
-                        <RadarChart data={getChartData()}>
+                        {/* outerRadius를 줄여 범례(Legend)와 겹치지 않게 수정 */}
+                        <RadarChart outerRadius="70%" data={getChartData()}>
                           <PolarGrid />
                           <PolarAngleAxis dataKey="subject" />
                           <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                          {/* 툴팁과 범례 활성화 */}
                           <Tooltip contentStyle={{ borderRadius: '8px' }} />
-                          <Legend />
+                          <Legend wrapperStyle={{ paddingTop: '20px' }} />
                           {selectedCountries.map((c, i) => (
                             <Radar key={c} name={c} dataKey={c} stroke={['#8884d8', '#82ca9d', '#ffc658'][i]} fill={['#8884d8', '#82ca9d', '#ffc658'][i]} fillOpacity={0.5} />
                           ))}
@@ -341,16 +347,16 @@
                     
                     <div className="space-y-4">
                       <div>
-                        <label className="font-bold text-blue-900 block mb-1">1. 국가 간 지수 비교 (가장 큰 차이점)</label>
-                        <textarea value={analysis1} onChange={e=>setAnalysis1(e.target.value)} className="w-full p-3 border rounded-lg" rows="3"></textarea>
+                        <label className="font-bold text-blue-900 block mb-1">1. 국가 간 지수 비교 (차이점 분석)</label>
+                        <textarea value={analysis1} onChange={e=>setAnalysis1(e.target.value)} placeholder="어떤 지수에서 국가 간 격차가 가장 크게 나타나나요?" className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
                       </div>
                       <div>
-                        <label className="font-bold text-blue-900 block mb-1">2. 지수 간 상관관계 (예: 기아-평화의 관계)</label>
-                        <textarea value={analysis2} onChange={e=>setAnalysis2(e.target.value)} className="w-full p-3 border rounded-lg" rows="3"></textarea>
+                        <label className="font-bold text-blue-900 block mb-1">2. 지수 간 상관관계 (패턴 찾기)</label>
+                        <textarea value={analysis2} onChange={e=>setAnalysis2(e.target.value)} placeholder="예: 언론자유가 높은 국가는 노동권 지수도 높은 경향이 있다." className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
                       </div>
                       <div>
                         <label className="font-bold text-blue-900 block mb-1">3. 구조적 원인 추론</label>
-                        <textarea value={analysis3} onChange={e=>setAnalysis3(e.target.value)} className="w-full p-3 border rounded-lg" rows="3"></textarea>
+                        <textarea value={analysis3} onChange={e=>setAnalysis3(e.target.value)} placeholder="위와 같은 인권 지수의 차이와 연관성이 나타나는 사회적, 구조적 원인은 무엇일까요?" className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
                       </div>
                     </div>
 
@@ -361,28 +367,28 @@
                   </div>
                 )}
 
-                {/* STEP 3: 기획 및 제출 */}
+                {}
                 {step === 3 && (
                   <div className="space-y-6">
                     <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 space-y-4">
-                      <h3 className="font-bold text-amber-900"><i className="fas fa-lightbulb"></i> 공익 광고 기획안</h3>
-                      <input type="text" placeholder="1. 광고 타겟 대상 (예: 전 세계 청소년)" value={psaTarget} onChange={e=>setPsaTarget(e.target.value)} className="w-full p-3 border rounded-lg"/>
-                      <textarea placeholder="2. 사회적 차원 해결방안 (제도, 기구 협력)" value={psaSocial} onChange={e=>setPsaSocial(e.target.value)} className="w-full p-3 border rounded-lg" rows="2"></textarea>
-                      <textarea placeholder="3. 개인적 차원 해결방안 (세계시민의식)" value={psaPersonal} onChange={e=>setPsaPersonal(e.target.value)} className="w-full p-3 border rounded-lg" rows="2"></textarea>
-                      <input type="text" placeholder="4. 핵심 슬로건 (광고 카피 한 줄)" value={psaSlogan} onChange={e=>setPsaSlogan(e.target.value)} className="w-full p-3 border rounded-lg font-bold"/>
-                      <textarea placeholder="5. 시각적 장면 구성 묘사" value={psaVisuals} onChange={e=>setPsaVisuals(e.target.value)} className="w-full p-3 border rounded-lg" rows="2"></textarea>
+                      <h3 className="font-bold text-amber-900"><i className="fas fa-lightbulb"></i> 공익 광고 기획안 (Canva 제작용 스토리보드)</h3>
+                      <input type="text" placeholder="1. 광고 타겟 대상 (예: 전 세계 청소년, 선진국 정부 등)" value={psaTarget} onChange={e=>setPsaTarget(e.target.value)} className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-amber-500"/>
+                      <textarea placeholder="2. 사회적 차원 해결방안 (법규 제정, 국제 협력, 기구 지원 등)" value={psaSocial} onChange={e=>setPsaSocial(e.target.value)} className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-amber-500" rows="2"></textarea>
+                      <textarea placeholder="3. 개인적 차원 해결방안 (세계시민의식, 일상 속 실천 방안 등)" value={psaPersonal} onChange={e=>setPsaPersonal(e.target.value)} className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-amber-500" rows="2"></textarea>
+                      <input type="text" placeholder="4. 핵심 슬로건 (사람들의 시선을 끌 메인 카피 한 줄)" value={psaSlogan} onChange={e=>setPsaSlogan(e.target.value)} className="w-full p-3 border rounded-lg font-bold focus:ring-2 focus:ring-amber-500"/>
+                      <textarea placeholder="5. 시각적 장면 구성 (어떤 이미지나 아이콘, 배경을 사용할 것인지 묘사)" value={psaVisuals} onChange={e=>setPsaVisuals(e.target.value)} className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-amber-500" rows="2"></textarea>
                     </div>
 
                     <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
-                      <h3 className="font-bold text-emerald-900 mb-2"><i className="fas fa-leaf"></i> 나의 다짐</h3>
-                      <input type="text" placeholder="세계시민으로서 실천할 다짐 한 줄..." value={pledge} onChange={e=>setPledge(e.target.value)} className="w-full p-3 border rounded-lg font-bold"/>
+                      <h3 className="font-bold text-emerald-900 mb-2"><i className="fas fa-leaf"></i> 세계시민으로서 나의 다짐</h3>
+                      <input type="text" placeholder="인권 문제 해결을 위해 내가 실천할 수 있는 다짐 한 줄..." value={pledge} onChange={e=>setPledge(e.target.value)} className="w-full p-3 border rounded-lg font-bold focus:ring-2 focus:ring-emerald-500"/>
                     </div>
 
                     <div className="flex justify-between pt-4 border-t">
                       <button onClick={()=>setStep(2)} className="px-6 py-2 bg-slate-100 rounded-lg font-bold">이전</button>
                       <div className="flex gap-2">
                         {isEditing && <button onClick={()=>setIsEditing(false)} className="px-6 py-2 bg-slate-200 rounded-lg font-bold">수정 취소</button>}
-                        <button onClick={handleSubmit} disabled={isSubmitting} className="px-8 py-2 bg-indigo-600 text-white rounded-lg font-bold shadow">
+                        <button onClick={handleSubmit} disabled={isSubmitting} className="px-8 py-2 bg-indigo-600 text-white rounded-lg font-bold shadow hover:bg-indigo-700 disabled:opacity-50">
                           {isSubmitting ? '제출 중...' : (isEditing ? '수정 완료' : '최종 제출')}
                         </button>
                       </div>
