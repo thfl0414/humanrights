@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>세계 인권지수 탐구 (교사용)</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
+  <style>
+    body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background-color: #f8fafc; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBMD8w3CZuIHwd-9lclVY2uE0L-c_xRQt4",
+      authDomain: "humanrights-8c05a.firebaseapp.com",
+      projectId: "humanrights-8c05a",
+      storageBucket: "humanrights-8c05a.firebasestorage.app",
+      messagingSenderId: "639932009296",
+      appId: "1:639932009296:web:0258436e082b7f219c3a55",
+      databaseURL: "https://humanrights-8c05a-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    };
+    
+    let app, auth, db;
+    if (!firebase.apps.length) { app = firebase.initializeApp(firebaseConfig); } 
+    else { app = firebase.app(); }
+    auth = firebase.auth();
+    db = firebase.database();
+    
+    const DB_PATH = "humanrights_data_v2";
+    const TEACHER_PASSWORD = 'password123';
+
+    const generateGeminiFeedback = async (studentData, apiKey) => {
+      if (!apiKey) {
+        alert("우측 상단에 발급받으신 Gemini API 키를 입력해주세요!");
+        return "";
+      }
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+      const systemPrompt = `당신은 고등학교 1학년 통합사회 교사입니다. 학생이 제출한 '세계 인권지수 분석 및 공익 광고 기획' 과제를 평가하고 피드백을 작성해야 합니다.
+성취기준: [10통사2-01-03] 사회적 소수자 차별 등 국내 인권 문제와 인권지수를 통해 확인할 수 있는 세계 인권 문제의 양상을 조사하고, 이에 대한 해결 방안을 모색한다.
+
+학생 데이터:
+- 국가: ${studentData.countries.join(', ')}
+- 분석1(비교): ${studentData.rawFields?.analysis1}
+- 분석2(상관관계): ${studentData.rawFields?.analysis2}
+- 분석3(원인): ${studentData.rawFields?.analysis3}
+- 광고슬로건: ${studentData.rawFields?.psaSlogan}
+- 다짐: ${studentData.pledge}
+
+학생의 노력을 칭찬하고, 잘한 점과 보완할 점을 3~4문장의 친절한 말투(~해요, ~군요)로 작성하세요. 마크다운 기호 없이 출력하세요.`;
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: "과제를 바탕으로 피드백 초안 작성" }] }],
+            systemInstruction: { parts: [{ text: systemPrompt }] }
+          })
+        });
+        const result = await response.json();
+        return result.candidates[0].content.parts[0].text;
+      } catch (error) {
+        alert("AI 피드백 생성 실패. API 키가 유효한지 확인하세요.");
+        return "";
+      }
+    };
+
+    const downloadCSV = (data) => {
+      if (!data.length) return;
+      const headers = ['이름', '학번', '국가', '분석1', '분석2', '분석3', '광고슬로건', '다짐', '피드백'];
+      const rows = [headers.join(',')];
+      data.forEach(row => {
+        const raw = row.rawFields || {};
+        const vals = [
+          row.studentName, row.studentId, row.countries?.join('/'),
+          `"${(raw.analysis1 || '').replace(/"/g, '""')}"`,
+          `"${(raw.analysis2 || '').replace(/"/g, '""')}"`,
+          `"${(raw.analysis3 || '').replace(/"/g, '""')}"`,
+          `"${(raw.psaSlogan || '').replace(/"/g, '""')}"`,
+          `"${(row.pledge || '').replace(/"/g, '""')}"`,
+          `"${(row.teacherFeedback || '').replace(/"/g, '""')}"`
+        ];
+        rows.push(vals.join(','));
+      });
+      const blob = new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' }); 
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob); link.download = '과제결과.csv'; link.click();
+    };
+
+    const App = () => {
+      const [isLoggedIn, setIsLoggedIn] = useState(false);
+      const [pwd, setPwd] = useState('');
+      const [submissions, setSubmissions] = useState([]);
+      
+      const [selectedStudent, setSelectedStudent] = useState(null);
+      const [apiKey, setApiKey] = useState('');
+      const [feedbackText, setFeedbackText] = useState('');
+      const [isGenerating, setIsGenerating] = useState(false);
+
+      useEffect(() => {
+        auth.signInAnonymously().catch(console.error);
+        if (isLoggedIn) {
+          const subRef = db.ref(`${DB_PATH}/submissions`);
+          subRef.on('value', snap => {
+            const val = snap.val();
+            if (val) {
+              const list = Object.keys(val).map(k => ({id: k, ...val[k]})).sort((a,b) => b.createdAt - a.createdAt);
+              setSubmissions(list);
+            }
+          });
+          return () => subRef.off();
+        }
+      }, [isLoggedIn]);
+
+      if (!isLoggedIn) {
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+            <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm text-center">
+              <i className="fas fa-lock text-4xl text-amber-500 mb-4 block"></i>
+              <h2 className="text-xl font-bold mb-4">교사 대시보드 인증</h2>
+              <input type="password" placeholder="비밀번호 입력" value={pwd} onChange={e=>setPwd(e.target.value)} className="w-full p-3 border rounded mb-4 focus:ring-2 focus:ring-amber-500"/>
+              <button onClick={() => { pwd === TEACHER_PASSWORD ? setIsLoggedIn(true) : alert('틀렸습니다.'); }} className="w-full bg-amber-600 text-white p-3 rounded font-bold mb-2">입장하기</button>
+              <button onClick={() => window.location.assign('index.html')} className="w-full bg-slate-200 p-3 rounded text-sm text-slate-700">학생 페이지로</button>
+            </div>
+          </div>
+        );
+      }
+
+      const handleGenerateAI = async () => {
+        setIsGenerating(true);
+        const fb = await generateGeminiFeedback(selectedStudent, apiKey);
+        if (fb) setFeedbackText(fb);
+        setIsGenerating(false);
+      };
+
+      const handleSaveFeedback = async () => {
+        await db.ref(`${DB_PATH}/submissions/${selectedStudent.id}`).update({ teacherFeedback: feedbackText });
+        setSelectedStudent(null);
+      };
+
+      return (
+        <div className="min-h-screen bg-slate-50">
+          <header className="bg-indigo-900 text-white p-4 shadow flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 className="text-xl font-bold"><i className="fas fa-chalkboard-teacher"></i> 교사 대시보드 (총 {submissions.length}명 제출)</h1>
+            <div className="flex gap-2 flex-wrap items-center">
+              <input type="password" placeholder="Gemini API 키 입력..." value={apiKey} onChange={e=>setApiKey(e.target.value)} className="px-3 py-1.5 text-sm rounded text-black outline-none w-48"/>
+              <button onClick={() => downloadCSV(submissions)} className="bg-blue-600 px-3 py-1.5 rounded text-sm font-bold shadow hover:bg-blue-500"><i className="fas fa-download"></i> CSV 다운</button>
+              <button onClick={() => window.location.assign('index.html')} className="bg-slate-700 px-3 py-1.5 rounded text-sm hover:bg-slate-600">학생화면</button>
+            </div>
+          </header>
+
+          <main className="p-6 max-w-7xl mx-auto">
+            <div className="bg-white rounded-xl shadow border overflow-hidden">
+              <table className="w-full text-left">
+                <thead className="bg-slate-100 border-b">
+                  <tr><th className="p-4">학번/이름</th><th className="p-4">선택국가</th><th className="p-4">핵심 슬로건</th><th className="p-4 text-center">피드백</th><th className="p-4">관리</th></tr>
+                </thead>
+                <tbody>
+                  {submissions.map(sub => (
+                    <tr key={sub.id} className="border-b hover:bg-slate-50">
+                      <td className="p-4 font-bold">{sub.studentId} {sub.studentName}</td>
+                      <td className="p-4 text-sm">{sub.countries?.join(', ')}</td>
+                      <td className="p-4 text-sm text-slate-600">"{sub.rawFields?.psaSlogan}"</td>
+                      <td className="p-4 text-center">
+                        {sub.teacherFeedback ? <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">완료</span> : <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold">미작성</span>}
+                      </td>
+                      <td className="p-4">
+                        <button onClick={() => { setSelectedStudent(sub); setFeedbackText(sub.teacherFeedback || ''); }} className="bg-blue-50 text-blue-600 px-3 py-1 rounded text-sm font-bold border border-blue-200">확인/작성</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </main>
+
+          {/* 모달창 */}
+          {selectedStudent && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col">
+                <div className="p-4 border-b flex justify-between items-center bg-slate-50">
+                  <h3 className="font-bold text-lg">{selectedStudent.studentName} 학생 피드백 작성</h3>
+                  <button onClick={() => setSelectedStudent(null)} className="text-slate-400 hover:text-black"><i className="fas fa-times text-xl"></i></button>
+                </div>
+                
+                <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-2">
+                  <div className="p-4 overflow-y-auto border-r bg-slate-50 text-sm space-y-4">
+                    <div><span className="font-bold text-blue-800">국가:</span> {selectedStudent.countries?.join(', ')}</div>
+                    <div className="bg-white p-2 rounded border"><span className="font-bold">분석1:</span> {selectedStudent.rawFields?.analysis1}</div>
+                    <div className="bg-white p-2 rounded border"><span className="font-bold">분석2:</span> {selectedStudent.rawFields?.analysis2}</div>
+                    <div className="bg-white p-2 rounded border"><span className="font-bold">분석3:</span> {selectedStudent.rawFields?.analysis3}</div>
+                    <div className="bg-white p-2 rounded border"><span className="font-bold">다짐:</span> {selectedStudent.pledge}</div>
+                  </div>
+                  
+                  <div className="p-4 flex flex-col h-full bg-blue-50/30">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-bold text-blue-900"><i className="fas fa-robot"></i> 맞춤형 피드백 작성</span>
+                      <button onClick={handleGenerateAI} disabled={isGenerating} className="bg-purple-600 text-white px-3 py-1 rounded text-sm font-bold shadow disabled:opacity-50">
+                        {isGenerating ? '생성 중...' : 'AI 초안 생성'}
+                      </button>
+                    </div>
+                    <textarea value={feedbackText} onChange={e=>setFeedbackText(e.target.value)} className="flex-1 w-full border rounded p-3 mb-4 resize-none focus:ring-2 focus:ring-blue-500" placeholder="피드백 내용 또는 AI 생성 결과가 여기에 나타납니다."></textarea>
+                    <button onClick={handleSaveFeedback} className="bg-blue-600 text-white py-3 rounded font-bold w-full shadow-lg text-lg">전송 및 저장</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
