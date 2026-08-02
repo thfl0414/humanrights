@@ -3,28 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>인권지수 데이터 탐구 웹앱 (학생용)</title>
+  <title>세계 인권지수 탐구 (학생용)</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
   <!-- React & ReactDOM -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  
-  <!-- PropTypes (Recharts UMD) -->
+  <!-- PropTypes (Recharts 의존성) -->
   <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
-  
   <!-- Babel -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  
   <!-- Recharts -->
   <script src="https://unpkg.com/recharts@2.1.12/umd/Recharts.js"></script>
-  
-  <!-- Firebase Compat 라이브러리 -->
+  <!-- Firebase Compat (Realtime Database 용) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
@@ -44,35 +38,29 @@
     const { useState, useEffect } = React;
     const { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip, Legend } = window.Recharts;
 
-    // Firebase 설정
     const firebaseConfig = {
       apiKey: "AIzaSyBMD8w3CZuIHwd-9lclVY2uE0L-c_xRQt4",
       authDomain: "humanrights-8c05a.firebaseapp.com",
-      databaseURL: "https://humanrights-8c05a-default-rtdb.asia-southeast1.firebasedatabase.app/",
       projectId: "humanrights-8c05a",
       storageBucket: "humanrights-8c05a.firebasestorage.app",
       messagingSenderId: "639932009296",
-      appId: "1:639932009296:web:0258436e082b7f219c3a55"
+      appId: "1:639932009296:web:0258436e082b7f219c3a55",
+      databaseURL: "https://humanrights-8c05a-default-rtdb.asia-southeast1.firebasedatabase.app/"
     };
     
-    const appId = 'hr-edu-app-default';
-    const safeAppId = appId.replace(/[.#$\[\]]/g, '_');
-    
+    // Firebase 앱 초기화 방어 로직
     let app, auth, db;
-    try {
-      if (Object.keys(firebaseConfig).length > 0 && !firebase.apps.length) {
-        app = firebase.initializeApp(firebaseConfig);
-        auth = firebase.auth();
-        db = firebase.database();
-      }
-    } catch (e) {
-      console.warn("Firebase initialization skipped or failed:", e);
+    if (!firebase.apps.length) {
+      app = firebase.initializeApp(firebaseConfig);
+    } else {
+      app = firebase.app();
     }
+    auth = firebase.auth();
+    db = firebase.database();
 
-    const COLLECTION_NAME = 'submissions';
-    const INTRO_COLLECTION = 'intro_opinions';
+    // 데이터베이스 경로
+    const DB_PATH = "humanrights_data_v2";
 
-    // 모의 인권 지수 데이터
     const COUNTRY_DATA = {
       "한국": { 언론자유: 70, 기아: 95, 성평등: 65, 노동권: 60, 평화: 75 },
       "미국": { 언론자유: 75, 기아: 90, 성평등: 75, 노동권: 50, 평화: 60 },
@@ -86,256 +74,324 @@
     const COUNTRIES = Object.keys(COUNTRY_DATA);
     const INDICATORS = ['언론자유', '기아', '성평등', '노동권', '평화'];
 
-    const StudentView = ({ user, submissions, introOpinions }) => {
+    const App = () => {
+      const [user, setUser] = useState(null);
+      const [introOpinions, setIntroOpinions] = useState([]);
+      const [mySubmission, setMySubmission] = useState(null);
+      
       const [step, setStep] = useState(0);
-      const [studentName, setStudentName] = useState('');
       const [studentId, setStudentId] = useState('');
+      const [studentName, setStudentName] = useState('');
+      
+      // Step 0: 도입부
       const [introOpinion, setIntroOpinion] = useState('');
+      const [isSubmittingOpinion, setIsSubmittingOpinion] = useState(false);
+      
+      // Step 1: 국가 선택
       const [selectedCountries, setSelectedCountries] = useState([]);
       
-      const [analysis1, setAnalysis1] = useState(''); 
-      const [analysis2, setAnalysis2] = useState(''); 
+      // Step 2: 데이터 분석 노트
+      const [analysis1, setAnalysis1] = useState('');
+      const [analysis2, setAnalysis2] = useState('');
       const [analysis3, setAnalysis3] = useState('');
       
-      const [psaTarget, setPsaTarget] = useState(''); 
-      const [psaSocial, setPsaSocial] = useState(''); 
-      const [psaPersonal, setPsaPersonal] = useState(''); 
-      const [psaSlogan, setPsaSlogan] = useState(''); 
+      // Step 3: 공익 광고 기획
+      const [psaTarget, setPsaTarget] = useState('');
+      const [psaSocial, setPsaSocial] = useState('');
+      const [psaPersonal, setPsaPersonal] = useState('');
+      const [psaSlogan, setPsaSlogan] = useState('');
       const [psaVisuals, setPsaVisuals] = useState('');
-      
       const [pledge, setPledge] = useState('');
-      const [isSubmitting, setIsSubmitting] = useState(false);
       
-      const mySubmission = submissions.find(s => s.uid === (user?.uid || 'local_user'));
+      const [isSubmitting, setIsSubmitting] = useState(false);
       const [isEditing, setIsEditing] = useState(false);
 
+      // 인증 처리
+      useEffect(() => {
+        auth.signInAnonymously().catch(console.error);
+        const unsub = auth.onAuthStateChanged(u => {
+          if (u) setUser(u);
+        });
+        return () => unsub();
+      }, []);
+
+      // 실시간 데이터 구독 (로그인 완료 후)
+      useEffect(() => {
+        if (!user) return;
+        
+        // 도입부 의견 구독
+        const introRef = db.ref(`${DB_PATH}/intro_opinions`);
+        introRef.on('value', snap => {
+          const val = snap.val();
+          if (val) {
+            const list = Object.keys(val).map(k => ({ id: k, ...val[k] })).sort((a, b) => b.createdAt - a.createdAt);
+            setIntroOpinions(list);
+          }
+        });
+
+        // 내 제출물 확인
+        const subRef = db.ref(`${DB_PATH}/submissions`);
+        subRef.orderByChild('uid').equalTo(user.uid).on('value', snap => {
+          const val = snap.val();
+          if (val) {
+            const id = Object.keys(val)[0];
+            setMySubmission({ id, ...val[id] });
+          } else {
+            setMySubmission(null);
+          }
+        });
+
+        return () => { introRef.off(); subRef.off(); };
+      }, [user]);
+
+      const handleEditClick = () => {
+        if (!mySubmission) return;
+        setStudentId(mySubmission.studentId || '');
+        setStudentName(mySubmission.studentName || '');
+        setSelectedCountries(mySubmission.countries || []);
+        
+        const raw = mySubmission.rawFields || {};
+        setAnalysis1(raw.analysis1 || ''); setAnalysis2(raw.analysis2 || ''); setAnalysis3(raw.analysis3 || '');
+        setPsaTarget(raw.psaTarget || ''); setPsaSocial(raw.psaSocial || ''); setPsaPersonal(raw.psaPersonal || ''); 
+        setPsaSlogan(raw.psaSlogan || ''); setPsaVisuals(raw.psaVisuals || '');
+        setPledge(mySubmission.pledge || '');
+        
+        setIsEditing(true);
+        setStep(1); // 국가 선택 화면으로 바로 이동
+      };
+
       const handleOpinionSubmit = async () => {
-        if (!studentName || !introOpinion.trim()) return;
-        if(db) {
-          await db.ref(`artifacts/${safeAppId}/public/data/${INTRO_COLLECTION}`).push({
-            uid: user?.uid || 'local_user', studentName, studentId, opinion: introOpinion, createdAt: Date.now()
+        if (!studentName || !studentId || !introOpinion.trim()) return;
+        setIsSubmittingOpinion(true);
+        try {
+          await db.ref(`${DB_PATH}/intro_opinions`).push({
+            uid: user.uid, studentId, studentName, opinion: introOpinion, createdAt: Date.now()
           });
-        }
-        setIntroOpinion('');
+          setIntroOpinion('');
+        } catch(e) { console.error(e); }
+        setIsSubmittingOpinion(false);
       };
 
       const handleSubmit = async () => {
-        if(selectedCountries.length === 0) return;
+        if (selectedCountries.length < 2 || !analysis1 || !psaTarget || !pledge) return;
         setIsSubmitting(true);
-        const data = {
-          uid: user?.uid || 'local_user', 
-          studentName, 
-          studentId, 
-          countries: selectedCountries,
-          analysis: `[국가 간 차이]\n${analysis1}\n\n[상관관계]\n${analysis2}\n\n[원인추론]\n${analysis3}`,
-          psa: `[타겟]\n${psaTarget}\n\n[사회적]\n${psaSocial}\n\n[개인적]\n${psaPersonal}\n\n[슬로건]\n${psaSlogan}\n\n[시각]\n${psaVisuals}`,
-          pledge, 
-          createdAt: Date.now()
-        };
         
+        const payload = {
+          uid: user.uid, studentId, studentName, countries: selectedCountries,
+          rawFields: { analysis1, analysis2, analysis3, psaTarget, psaSocial, psaPersonal, psaSlogan, psaVisuals },
+          pledge, createdAt: Date.now()
+        };
+
         try {
-          if (db) {
-            const ref = db.ref(`artifacts/${safeAppId}/public/data/${COLLECTION_NAME}`);
-            if (mySubmission && isEditing) await ref.child(mySubmission.id).update(data);
-            else await ref.push(data);
+          if (mySubmission && isEditing) {
+            await db.ref(`${DB_PATH}/submissions/${mySubmission.id}`).update(payload);
+            setIsEditing(false);
           } else {
-            alert("저장되었습니다! (단, Firebase 연결이 없어 브라우저를 닫으면 사라집니다)");
+            await db.ref(`${DB_PATH}/submissions`).push(payload);
           }
-          setIsEditing(false);
-        } catch(e) { 
-          console.error(e); 
-          alert("데이터 저장 중 오류가 발생했습니다.");
-        }
+        } catch (e) { alert("제출 중 오류가 발생했습니다."); console.error(e); }
         setIsSubmitting(false);
       };
 
-      const renderChart = () => {
-        const data = INDICATORS.map(ind => {
-          let pt = { subject: ind };
-          selectedCountries.forEach(c => pt[c] = COUNTRY_DATA[c][ind]);
+      const getChartData = () => {
+        return INDICATORS.map(ind => {
+          const pt = { subject: ind };
+          selectedCountries.forEach(c => { pt[c] = COUNTRY_DATA[c][ind]; });
           return pt;
         });
-        const colors = ['#8884d8', '#82ca9d', '#ffc658'];
-        return (
-          <div className="bg-white p-6 rounded-2xl border mb-6 items-center">
-            <h3 className="text-lg font-bold text-center mb-4"><i className="fas fa-chart-pie text-blue-500"></i> 인권지수 비교 (높을수록 좋음)</h3>
-            <div className="h-64 w-full">
-              <ResponsiveContainer>
-                <RadarChart data={data}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="subject" />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} />
-                  <Tooltip />
-                  <Legend />
-                  {selectedCountries.map((c, i) => <Radar key={c} name={c} dataKey={c} stroke={colors[i]} fill={colors[i]} fillOpacity={0.5} />)}
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        );
       };
 
       if (mySubmission && !isEditing) {
         return (
-          <div className="max-w-2xl mx-auto p-6 mt-10 bg-white rounded-xl shadow-md text-center">
-            <i className="fas fa-check-circle text-green-500 text-6xl mb-4"></i>
-            <h2 className="text-2xl font-bold mb-4">제출 완료!</h2>
-            <div className="bg-slate-50 p-4 rounded text-left border mb-6">
-              <h3 className="font-bold border-b pb-2 mb-2"><i className="fas fa-comment-dots text-blue-500"></i> 교사 피드백</h3>
-              {mySubmission.teacherFeedback ? <p className="text-blue-900 whitespace-pre-wrap">{mySubmission.teacherFeedback}</p> : <p className="text-slate-400 text-center py-4">피드백 대기중...</p>}
+          <div className="min-h-screen bg-slate-50 py-8 px-4">
+            <div className="max-w-3xl mx-auto space-y-6">
+              <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm">
+                <h2 className="text-xl font-bold"><i className="fas fa-check-circle text-green-500"></i> 제출 완료</h2>
+                <button onClick={() => window.location.assign('teacher.html')} className="text-slate-400 text-sm hover:text-amber-600">
+                  <i className="fas fa-lock"></i> 교사 모드
+                </button>
+              </div>
+              
+              <div className="bg-white p-8 rounded-2xl shadow-md border-t-4 border-green-500 text-center">
+                <h3 className="text-2xl font-bold mb-2">과제가 성공적으로 제출되었습니다!</h3>
+                <p className="text-slate-600 mb-6">선생님의 피드백을 기다려주세요.</p>
+                
+                <div className="bg-slate-50 rounded-xl p-6 text-left border mb-6">
+                  <h4 className="font-bold border-b pb-2 mb-4"><i className="fas fa-comment-dots text-blue-500"></i> 선생님의 피드백</h4>
+                  {mySubmission.teacherFeedback ? (
+                    <div className="bg-blue-50 p-4 rounded-lg text-blue-900 whitespace-pre-wrap leading-relaxed">{mySubmission.teacherFeedback}</div>
+                  ) : (
+                    <p className="text-center text-slate-400 py-4"><i className="fas fa-spinner fa-spin"></i> 피드백을 작성 중입니다...</p>
+                  )}
+                </div>
+                
+                <button onClick={handleEditClick} className="bg-white border-2 border-slate-200 px-6 py-2 rounded-xl font-bold hover:bg-slate-50 shadow-sm">
+                  <i className="fas fa-edit"></i> 제출한 내용 다시 수정하기
+                </button>
+              </div>
             </div>
-            <button onClick={() => setIsEditing(true)} className="border px-4 py-2 rounded font-bold text-slate-600 hover:bg-slate-50">수정하기</button>
           </div>
         );
       }
 
       return (
-        <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
-          <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm">
-            <h2 className="text-xl font-bold"><i className="fas fa-globe-asia text-blue-600"></i> 세계 인권지수 탐구</h2>
-            {/* 교사 대시보드로 이동하는 링크 (teacher.html 파일로 연결) */}
-            <button onClick={() => window.location.href = 'teacher.html'} className="text-slate-400 text-sm hover:text-slate-700">
-              <i className="fas fa-lock"></i> 교사 모드
-            </button>
-          </div>
+        <div className="min-h-screen bg-slate-50 py-4 sm:py-8 px-4">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm">
+              <h2 className="text-xl font-bold"><i className="fas fa-globe-asia text-blue-600"></i> [통합사회] 세계 인권지수 탐구</h2>
+              <button onClick={() => window.location.assign('teacher.html')} className="text-slate-400 text-sm hover:text-amber-600">
+                <i className="fas fa-lock"></i> 교사 모드
+              </button>
+            </div>
 
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            {step === 0 && (
-              <div className="space-y-6">
-                <div className="bg-blue-50 p-4 border-l-4 border-blue-500 rounded text-sm text-slate-700">
-                  <span className="font-bold text-blue-900 mb-1 block">📌 탐구 질문</span>
-                  세계 여러 나라의 인권지수는 어떤 차이를 보이며, 격차를 줄이기 위해 어떻게 협력해야 할까?
-                </div>
-                <div className="flex gap-4">
-                  <input type="text" placeholder="학번 (예: 10101)" value={studentId} onChange={e=>setStudentId(e.target.value)} className="border p-2 rounded flex-1 focus:ring-2 focus:ring-blue-400 outline-none"/>
-                  <input type="text" placeholder="이름 (예: 홍길동)" value={studentName} onChange={e=>setStudentName(e.target.value)} className="border p-2 rounded flex-1 focus:ring-2 focus:ring-blue-400 outline-none"/>
-                </div>
-                <div className="border p-4 rounded bg-slate-50 text-center">
-                  <p className="mb-2 font-bold">🤔 이 지도는 무엇을 나타낼까요?</p>
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Press_freedom_2023.svg/1024px-Press_freedom_2023.svg.png" className="max-w-full rounded mb-4 shadow" alt="세계 지도"/>
-                  <div className="flex gap-2">
-                    <input type="text" value={introOpinion} onChange={e=>setIntroOpinion(e.target.value)} placeholder="색깔 차이의 의미를 유추해보세요" className="border p-2 rounded flex-1 focus:ring-2 focus:ring-blue-400 outline-none"/>
-                    <button onClick={handleOpinionSubmit} className="bg-blue-600 text-white px-4 py-2 rounded font-bold hover:bg-blue-700">등록</button>
-                  </div>
-                  
-                  {/* 학생 의견 표시 영역 */}
-                  <div className="mt-4 text-left h-32 overflow-y-auto border-t pt-2 space-y-2">
-                    {introOpinions.length === 0 ? (
-                      <p className="text-center text-slate-400 text-sm mt-4">가장 먼저 의견을 남겨보세요!</p>
-                    ) : (
-                      introOpinions.map(op => (
-                        <div key={op.id} className="bg-white p-2 rounded shadow-sm text-sm border">
-                          <span className="font-bold text-slate-700 mr-2">{op.studentId} {op.studentName}</span>
-                          <span className="text-slate-600">{op.opinion}</span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-                <button onClick={() => setStep(1)} disabled={!studentName || !studentId} className="w-full bg-indigo-600 text-white py-3 rounded font-bold disabled:bg-slate-300 hover:bg-indigo-700 transition">탐구 시작하기</button>
-              </div>
-            )}
-            {step === 1 && (
-              <div className="space-y-4">
-                <h3 className="font-bold text-lg">국가 선택 (최대 3개)</h3>
-                <div className="flex flex-wrap gap-2">
-                  {COUNTRIES.map(c => (
-                    <button key={c} onClick={() => {
-                      if (selectedCountries.includes(c)) setSelectedCountries(selectedCountries.filter(x => x !== c));
-                      else if (selectedCountries.length < 3) setSelectedCountries([...selectedCountries, c]);
-                    }} className={`px-4 py-2 rounded-full font-bold transition ${selectedCountries.includes(c) ? 'bg-blue-600 text-white' : 'bg-slate-100 hover:bg-slate-200'}`}>
-                      {c}
-                    </button>
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+              {/* 스텝 바 */}
+              {step > 0 && (
+                <div className="flex border-b bg-slate-50">
+                  {['국가선택', '데이터 분석', '광고 기획 & 다짐'].map((label, idx) => (
+                    <div key={idx} className={`flex-1 py-4 text-center font-bold text-sm ${step === idx + 1 ? 'bg-blue-600 text-white' : step > idx + 1 ? 'text-blue-600' : 'text-slate-400'}`}>
+                      {idx + 1}. {label}
+                    </div>
                   ))}
                 </div>
-                <div className="flex justify-end gap-2 pt-4">
-                  <button onClick={()=>setStep(0)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded font-bold">이전</button>
-                  <button onClick={()=>setStep(2)} disabled={selectedCountries.length<2} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-bold disabled:bg-slate-300">다음</button>
-                </div>
+              )}
+
+              <div className="p-4 sm:p-8">
+                {/* STEP 0: 도입부 */}
+                {step === 0 && (
+                  <div className="space-y-6">
+                    <div className="bg-blue-50 border-l-4 border-blue-500 p-5 rounded">
+                      <h3 className="font-bold text-blue-900 mb-2"><i className="fas fa-flag"></i> 학습 목표 확인</h3>
+                      <p className="text-sm mb-1"><b>[성취기준]</b> 10통사2-01-03 사회적 소수자 차별 등 인권 문제의 양상을 조사하고 해결방안 모색.</p>
+                      <p className="text-sm"><b>[탐구질문]</b> 세계 여러 나라의 인권지수 차이는 왜 발생하며, 어떻게 협력해야 할까?</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <input type="text" placeholder="학번 (예: 10101)" value={studentId} onChange={e=>setStudentId(e.target.value)} className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+                      <input type="text" placeholder="이름 (예: 홍길동)" value={studentName} onChange={e=>setStudentName(e.target.value)} className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-xl border shadow-sm">
+                      <h4 className="font-bold mb-2"><i className="fas fa-search"></i> 이 지도는 무엇을 나타낼까요?</h4>
+                      <p className="text-sm text-slate-600 mb-4">색깔이 다르게 칠해진 이유와 의미를 유추하여 친구들과 의견을 나눠봅시다.</p>
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Press_freedom_2023.svg/1024px-Press_freedom_2023.svg.png" alt="의문의 지도" className="w-full rounded mb-4"/>
+                      
+                      <div className="flex gap-2">
+                        <input type="text" value={introOpinion} onChange={e=>setIntroOpinion(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleOpinionSubmit()} placeholder="어떤 의미의 지도일까요? 유추한 내용을 적어보세요" disabled={!studentName} className="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+                        <button onClick={handleOpinionSubmit} disabled={!studentName || !introOpinion} className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold">등록</button>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-50 p-4 rounded border h-48 overflow-y-auto">
+                      <h4 className="font-bold mb-3 text-sm text-slate-600"><i className="fas fa-comments"></i> 친구들의 의견</h4>
+                      {introOpinions.map(op => (
+                        <div key={op.id} className="bg-white p-2 mb-2 rounded shadow-sm text-sm">
+                          <span className="font-bold text-blue-800 mr-2">{op.studentId} {op.studentName}</span> {op.opinion}
+                        </div>
+                      ))}
+                    </div>
+
+                    <button onClick={() => setStep(1)} disabled={!studentName || !studentId} className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold disabled:bg-slate-300">
+                      탐구 시작하기 (국가 선택)
+                    </button>
+                  </div>
+                )}
+
+                {/* STEP 1: 국가선택 */}
+                {step === 1 && (
+                  <div className="space-y-6">
+                    <h3 className="font-bold mb-2">비교 분석할 국가를 선택하세요 (2~3개)</h3>
+                    <div className="flex flex-wrap gap-3">
+                      {COUNTRIES.map(c => {
+                        const isSelected = selectedCountries.includes(c);
+                        return (
+                          <button key={c} onClick={() => {
+                            if(isSelected) setSelectedCountries(selectedCountries.filter(x => x !== c));
+                            else if(selectedCountries.length < 3) setSelectedCountries([...selectedCountries, c]);
+                          }} className={`px-4 py-2 rounded-full font-bold ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100'}`}>
+                            {c}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="flex justify-between pt-4 border-t">
+                      <button onClick={()=>setStep(0)} className="px-6 py-2 bg-slate-100 rounded-lg font-bold">이전</button>
+                      <button onClick={()=>setStep(2)} disabled={selectedCountries.length < 2} className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold disabled:bg-slate-300">다음 단계</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 2: 데이터분석 */}
+                {step === 2 && (
+                  <div className="space-y-6">
+                    <div className="h-80 w-full bg-slate-50 rounded border flex items-center justify-center p-4">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadarChart data={getChartData()}>
+                          <PolarGrid />
+                          <PolarAngleAxis dataKey="subject" />
+                          <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                          <Tooltip contentStyle={{ borderRadius: '8px' }} />
+                          <Legend />
+                          {selectedCountries.map((c, i) => (
+                            <Radar key={c} name={c} dataKey={c} stroke={['#8884d8', '#82ca9d', '#ffc658'][i]} fill={['#8884d8', '#82ca9d', '#ffc658'][i]} fillOpacity={0.5} />
+                          ))}
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="font-bold text-blue-900 block mb-1">1. 국가 간 지수 비교 (가장 큰 차이점)</label>
+                        <textarea value={analysis1} onChange={e=>setAnalysis1(e.target.value)} className="w-full p-3 border rounded-lg" rows="3"></textarea>
+                      </div>
+                      <div>
+                        <label className="font-bold text-blue-900 block mb-1">2. 지수 간 상관관계 (예: 기아-평화의 관계)</label>
+                        <textarea value={analysis2} onChange={e=>setAnalysis2(e.target.value)} className="w-full p-3 border rounded-lg" rows="3"></textarea>
+                      </div>
+                      <div>
+                        <label className="font-bold text-blue-900 block mb-1">3. 구조적 원인 추론</label>
+                        <textarea value={analysis3} onChange={e=>setAnalysis3(e.target.value)} className="w-full p-3 border rounded-lg" rows="3"></textarea>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between pt-4 border-t">
+                      <button onClick={()=>setStep(1)} className="px-6 py-2 bg-slate-100 rounded-lg font-bold">이전</button>
+                      <button onClick={()=>setStep(3)} className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold">다음 단계</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 3: 기획 및 제출 */}
+                {step === 3 && (
+                  <div className="space-y-6">
+                    <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 space-y-4">
+                      <h3 className="font-bold text-amber-900"><i className="fas fa-lightbulb"></i> 공익 광고 기획안</h3>
+                      <input type="text" placeholder="1. 광고 타겟 대상 (예: 전 세계 청소년)" value={psaTarget} onChange={e=>setPsaTarget(e.target.value)} className="w-full p-3 border rounded-lg"/>
+                      <textarea placeholder="2. 사회적 차원 해결방안 (제도, 기구 협력)" value={psaSocial} onChange={e=>setPsaSocial(e.target.value)} className="w-full p-3 border rounded-lg" rows="2"></textarea>
+                      <textarea placeholder="3. 개인적 차원 해결방안 (세계시민의식)" value={psaPersonal} onChange={e=>setPsaPersonal(e.target.value)} className="w-full p-3 border rounded-lg" rows="2"></textarea>
+                      <input type="text" placeholder="4. 핵심 슬로건 (광고 카피 한 줄)" value={psaSlogan} onChange={e=>setPsaSlogan(e.target.value)} className="w-full p-3 border rounded-lg font-bold"/>
+                      <textarea placeholder="5. 시각적 장면 구성 묘사" value={psaVisuals} onChange={e=>setPsaVisuals(e.target.value)} className="w-full p-3 border rounded-lg" rows="2"></textarea>
+                    </div>
+
+                    <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+                      <h3 className="font-bold text-emerald-900 mb-2"><i className="fas fa-leaf"></i> 나의 다짐</h3>
+                      <input type="text" placeholder="세계시민으로서 실천할 다짐 한 줄..." value={pledge} onChange={e=>setPledge(e.target.value)} className="w-full p-3 border rounded-lg font-bold"/>
+                    </div>
+
+                    <div className="flex justify-between pt-4 border-t">
+                      <button onClick={()=>setStep(2)} className="px-6 py-2 bg-slate-100 rounded-lg font-bold">이전</button>
+                      <div className="flex gap-2">
+                        {isEditing && <button onClick={()=>setIsEditing(false)} className="px-6 py-2 bg-slate-200 rounded-lg font-bold">수정 취소</button>}
+                        <button onClick={handleSubmit} disabled={isSubmitting} className="px-8 py-2 bg-indigo-600 text-white rounded-lg font-bold shadow">
+                          {isSubmitting ? '제출 중...' : (isEditing ? '수정 완료' : '최종 제출')}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-            {step === 2 && (
-              <div className="space-y-4">
-                {renderChart()}
-                <div className="bg-blue-50 p-4 rounded space-y-4">
-                  <h3 className="font-bold text-blue-900">데이터 분석</h3>
-                  <textarea value={analysis1} onChange={e=>setAnalysis1(e.target.value)} placeholder="1. 가장 큰 차이를 보이는 지수는?" className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400 outline-none"/>
-                  <textarea value={analysis2} onChange={e=>setAnalysis2(e.target.value)} placeholder="2. 두 지수 간의 연관성(패턴)은?" className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400 outline-none"/>
-                  <textarea value={analysis3} onChange={e=>setAnalysis3(e.target.value)} placeholder="3. 이러한 차이가 나타나는 구조적 원인은?" className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400 outline-none"/>
-                </div>
-                <div className="flex justify-between pt-4">
-                  <button onClick={()=>setStep(1)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded font-bold">이전</button>
-                  <button onClick={()=>setStep(3)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-bold">다음</button>
-                </div>
-              </div>
-            )}
-            {step === 3 && (
-              <div className="space-y-4">
-                <div className="bg-amber-50 p-4 rounded space-y-4">
-                  <h3 className="font-bold text-amber-900">공익 광고 기획안 작성</h3>
-                  <input type="text" value={psaTarget} onChange={e=>setPsaTarget(e.target.value)} placeholder="1. 광고 타겟" className="w-full p-2 border rounded focus:ring-2 focus:ring-amber-400 outline-none"/>
-                  <textarea value={psaSocial} onChange={e=>setPsaSocial(e.target.value)} placeholder="2. 사회적 차원 해결방안 (제도, 협력)" className="w-full p-2 border rounded focus:ring-2 focus:ring-amber-400 outline-none"/>
-                  <textarea value={psaPersonal} onChange={e=>setPsaPersonal(e.target.value)} placeholder="3. 개인적 차원 해결방안 (실천)" className="w-full p-2 border rounded focus:ring-2 focus:ring-amber-400 outline-none"/>
-                  <input type="text" value={psaSlogan} onChange={e=>setPsaSlogan(e.target.value)} placeholder="4. 핵심 슬로건" className="w-full p-2 border rounded focus:ring-2 focus:ring-amber-400 outline-none"/>
-                  <textarea value={psaVisuals} onChange={e=>setPsaVisuals(e.target.value)} placeholder="5. 시각적 장면 구성" className="w-full p-2 border rounded focus:ring-2 focus:ring-amber-400 outline-none"/>
-                </div>
-                <input type="text" value={pledge} onChange={e=>setPledge(e.target.value)} placeholder="나의 세계시민 실천 다짐 한 줄!" className="w-full p-3 border-2 border-emerald-300 rounded font-bold text-center focus:ring-2 focus:ring-emerald-500 outline-none"/>
-                <div className="flex justify-between pt-4">
-                  <button onClick={()=>setStep(2)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded font-bold">이전</button>
-                  <button onClick={handleSubmit} disabled={isSubmitting} className="px-8 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold shadow-md disabled:bg-slate-400">
-                    {isSubmitting ? '제출 중...' : '최종 제출'}
-                  </button>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
-        </div>
-      );
-    };
-
-    const App = () => {
-      const [user, setUser] = useState(null);
-      const [submissions, setSubmissions] = useState([]);
-      const [introOpinions, setIntroOpinions] = useState([]);
-
-      // 로그인 인증 처리
-      useEffect(() => {
-        if (!auth) return;
-        auth.signInAnonymously().catch(console.error);
-        const unsubAuth = auth.onAuthStateChanged(u => setUser(u));
-        return () => unsubAuth();
-      }, []);
-
-      // DB 데이터 구독 (로그인 완료 후)
-      useEffect(() => {
-        if (!db || !user) return;
-        
-        const subRef = db.ref(`artifacts/${safeAppId}/public/data/${COLLECTION_NAME}`);
-        const handleSub = (snap) => {
-          const val = snap.val();
-          const list = val ? Object.keys(val).map(k => ({id: k, ...val[k]})) : [];
-          // 학생 본인의 데이터나 피드백을 보여주기 위해 submissions 상태 업데이트
-          setSubmissions(list.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)));
-        };
-        subRef.on('value', handleSub);
-        
-        const introRef = db.ref(`artifacts/${safeAppId}/public/data/${INTRO_COLLECTION}`);
-        const handleIntro = (snap) => {
-          const val = snap.val();
-          const list = val ? Object.keys(val).map(k => ({id: k, ...val[k]})) : [];
-          setIntroOpinions(list.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)));
-        };
-        introRef.on('value', handleIntro);
-
-        return () => { 
-          subRef.off('value', handleSub); 
-          introRef.off('value', handleIntro); 
-        };
-      }, [user]);
-
-      return (
-        <div>
-          <StudentView user={user} submissions={submissions} introOpinions={introOpinions} />
         </div>
       );
     };
